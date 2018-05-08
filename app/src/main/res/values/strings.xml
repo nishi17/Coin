@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">coinMaster</string>
+
+    <!--Dashboard-->
+    <string name="title_Dashboard">Dashboard</string>
+
+
+    <string name="appbar_scrolling_view_behavior_view" translatable="false">android.support.design.widget.AppBarLayout$ScrollingViewBehavior</string>
+
+
+    <string name="title_section1" translatable="false">ALLCOINS</string>
+    <string name="title_section2" translatable="false">FAVOURITES</string>
+</resources>

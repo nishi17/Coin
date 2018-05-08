@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#000106</color>
+    <color name="colorPrimaryDark">#000108</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="white">#FFFFFF</color>
+    <color name="selectedtab">#5d3254</color>
+    <color name="black">#000000</color>
+    <color name="light_gray">#FFB4B0B0</color>
+    <color name="dark_gray">#898282</color>
+    <color name="red">#ff0008</color>
+    <color name="splashScreen">#312833</color>
+    <color name="text">#b4b4b4</color>
+    <color name="yellow">#ffc000</color>
+    <color name="purple">#5c3254</color>
+    <color name="green">#3dd422</color>
+    <color name="bgcolor">#f4f4f4</color>
+    <color name="border">#aaaaaa</color>
+    <color name="titlecolr">#5d3254</color>
+    <color name="card_dark_gray">#6e6e6e</color>
+</resources>
