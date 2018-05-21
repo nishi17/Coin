@@ -26,7 +26,7 @@
 
 
     <dimen name="location_height">18dp</dimen>
-    <dimen name="location_width">20dp</dimen>
+    <dimen name="location_width">40dp</dimen>
     <dimen name="heart_height">25dp</dimen>
     <dimen name="heart_width">25dp</dimen>
     <dimen name="send_height">25dp</dimen>

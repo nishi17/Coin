@@ -7,5 +7,5 @@ package com.demo.demo_coin.retrofot;
 public class API {
 
     public static final String Base_Url = " https://api.coinmarketcap.com/v2/ticker/";
-    public static final String MyFlyer = Base_Url  + "1347/?convert=INR ";
+    public static final String MyFlyer = Base_Url  + "/?convert=INR ";
 }

@@ -22,8 +22,8 @@
             </intent-filter>
         </activity>
 
-
-        <!--<service
+<!--
+        <service
             android:name=".sevices.BackgroundMethod"
             android:enabled="true"
             android:exported="true" />

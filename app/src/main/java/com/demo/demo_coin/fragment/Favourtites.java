@@ -1,6 +1,8 @@
 package com.demo.demo_coin.fragment;
 
 import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -21,6 +23,7 @@ import android.widget.Toast;
 
 import com.demo.demo_coin.MainActivity;
 import com.demo.demo_coin.R;
+import com.demo.demo_coin.database.DatabaseHandler;
 import com.demo.demo_coin.retrofot.DataResponse;
 import com.demo.demo_coin.retrofot.FavotiteResponse;
 import com.demo.demo_coin.retrofot.INResponse;
@@ -47,7 +50,7 @@ public class Favourtites extends Fragment implements View.OnClickListener {
     private SwipeRefreshLayout refreshLayout;
     private TextView txtView_no_data;
     private ListViewAdapterFavourites adapterFavourites;
-
+    private List<FavotiteResponse> favotiteResponseArrayList;
 
     public static Favourtites newInstance(int sectionNumber) {
 
@@ -58,6 +61,7 @@ public class Favourtites extends Fragment implements View.OnClickListener {
         return fragment;
     }
 
+    Handler ha;
 
     @Nullable
     @Override
@@ -99,8 +103,7 @@ public class Favourtites extends Fragment implements View.OnClickListener {
             }
         });
 
-
-        final Handler ha = new Handler();
+        ha = new Handler();
         ha.postDelayed(new Runnable() {
 
             @Override
@@ -123,74 +126,82 @@ public class Favourtites extends Fragment implements View.OnClickListener {
     @Override
     public void onResume() {
         super.onResume();
-        CAllAPI();
+        //  CAllAPI();
 
     }
 
-    List<FavotiteResponse> favotiteResponseArrayList;
 
     public void CAllAPI() {
         if (isConnectingToInternet(context)) {
 
 
-            List<Long> integerList = new ArrayList<Long>();
-            integerList.add((long) 1347);
-            integerList.add((long) 1415);
-            integerList.add((long) 1442);
-            integerList.add((long) 1446);
+            List<Integer> integerList1 = retriveIdDatabase();
+
+            Log.e("integerlist  ", String.valueOf(integerList1));
+
+            favotiteResponseArrayList = new ArrayList<FavotiteResponse>();
+            favotiteResponseArrayList.clear();
+
+            for (int i = 0; i < integerList1.size(); i++) {
+
+                final RestServices services = RestAdapter.getExStuffServices();
+                int a = integerList1.get(i);
+                String url = "https://api.coinmarketcap.com/v2/ticker/" + a + "//?convert=INR";
+
+                Call<FavotiteResponse> call = services.callApi(url);
+                call.enqueue(new Callback<FavotiteResponse>() {
+                    @Override
+                    public void onResponse(Call<FavotiteResponse> call, Response<FavotiteResponse> response) {
 
 
-            final RestServices services = RestAdapter.getExStuffServices();
-            Call<FavotiteResponse> call = services.callApi(/*1347*/);
-            call.enqueue(new Callback<FavotiteResponse>() {
-                @Override
-                public void onResponse(Call<FavotiteResponse> call, Response<FavotiteResponse> response) {
+                        int statusCode = response.code();
 
 
-                    int statusCode = response.code();
+                        Log.e("status code  ", String.valueOf(statusCode));
+
+                        if (statusCode == 200) {
 
 
-                    Log.e("status code  ", String.valueOf(statusCode));
-
-                    if (statusCode == 200) {
+                            FavotiteResponse favotiteResponse = response.body();
 
 
-                        FavotiteResponse favotiteResponse = response.body();
+                            favotiteResponseArrayList.add(favotiteResponse);
 
 
-                        favotiteResponseArrayList = new ArrayList<FavotiteResponse>();
-                        favotiteResponseArrayList.add(favotiteResponse);
+                            if (favotiteResponseArrayList.size() > 0) {
+                                recyclerView.setVisibility(View.VISIBLE);
+                                txtView_no_data.setVisibility(View.GONE);
+                            } else {
+                                txtView_no_data.setVisibility(View.VISIBLE);
+                                recyclerView.setVisibility(View.GONE);
+                            }
 
-                        List<DataResponse> dataResponse = new ArrayList<DataResponse>();
-                        dataResponse.add(favotiteResponse.getData());
+                            adapterFavourites = new ListViewAdapterFavourites(context, favotiteResponseArrayList);
+                            recyclerView.setAdapter(adapterFavourites);
 
-                        if (favotiteResponseArrayList.size() > 0) {
-                            recyclerView.setVisibility(View.VISIBLE);
-                            txtView_no_data.setVisibility(View.GONE);
-                        } else {
-                            txtView_no_data.setVisibility(View.VISIBLE);
-                            recyclerView.setVisibility(View.GONE);
+
+//                        List<DataResponse> dataResponse = new ArrayList<DataResponse>();
+//                        dataResponse.add(favotiteResponse.getData());
+
+
+                            Log.e("favotiteResponseArrayL", String.valueOf(favotiteResponseArrayList.size()));
+
+
                         }
-
-                        adapterFavourites = new ListViewAdapterFavourites(context, favotiteResponseArrayList);
-                        recyclerView.setAdapter(adapterFavourites);
-
-                        Log.e("gson fav ", " dsfasg ");
 
 
                     }
 
+                    @Override
+                    public void onFailure(Call<FavotiteResponse> call, Throwable t) {
 
-                }
+                        Log.e("exception  ", t.getMessage());
+                        Toast.makeText(context, t.getMessage(), Toast.LENGTH_LONG).show();
 
-                @Override
-                public void onFailure(Call<FavotiteResponse> call, Throwable t) {
+                    }
+                });
 
-                    Log.e("exception  ", t.getMessage());
-                    Toast.makeText(context, t.getMessage(), Toast.LENGTH_LONG).show();
-
-                }
-            });
+            }
 
 
         } else {
@@ -198,6 +209,43 @@ public class Favourtites extends Fragment implements View.OnClickListener {
         }
 
 
+    }
+
+    private ArrayList<Integer> retriveIdDatabase() {
+
+        ArrayList<Integer> stringList = new ArrayList<>();
+        stringList.clear();
+
+        DatabaseHandler databaseHandler = new DatabaseHandler(context);
+
+        SQLiteDatabase database = databaseHandler.getReadableDatabase();
+
+        String[] Colums = {DatabaseHandler.C_COIN_ID,
+                DatabaseHandler.C_NAME};
+
+        Cursor cursor = database.query
+                (DatabaseHandler.TABLE_COIN, Colums, null, null, null, null, null);
+
+        if (cursor.getCount() >= 0) {
+            if (cursor.moveToFirst()) {
+                do {
+
+                    String id = cursor.getString
+                            (cursor.getColumnIndex(DatabaseHandler.C_COIN_ID));
+
+                    String name = cursor.getString
+                            (cursor.getColumnIndex(DatabaseHandler.C_NAME));
+
+                    stringList.add(Integer.valueOf(id));
+                } while (cursor.moveToNext());
+
+            } else {
+
+            }
+
+        }
+
+        return stringList;
     }
 
     @Override
@@ -225,7 +273,7 @@ public class Favourtites extends Fragment implements View.OnClickListener {
         return false;
     }
 
-    class ListViewAdapterFavourites extends RecyclerView.Adapter<ListViewAdapterFavourites.MyViewHolder> {
+    public class ListViewAdapterFavourites extends RecyclerView.Adapter<ListViewAdapterFavourites.MyViewHolder> {
 
         private Context context;
         private List<FavotiteResponse> favriteobject;
@@ -263,20 +311,59 @@ public class Favourtites extends Fragment implements View.OnClickListener {
             holder.tv_id.setText(id);
             holder.tv_name_main.setText(dataResponse.getName());
             holder.tv_symbol.setText("(" + dataResponse.getSymbol() + ")");
-            holder.tv_price.setText("Price : " + inResponse.getPrice());
-            holder.tv_market_cap.setText("MarketCap : " + inResponse.getMarket_cap());
-            holder.tv_volume_24h.setText("Volume 24h:  : " + inResponse.getVolume_24h());
-            holder.tv_percent_change_1h.setText("1h : " + inResponse.getPercent_change_1h() + " %");
-            holder.tv_percent_change_24h.setText("24h : " + inResponse.getPercent_change_24h() + " %");
-            holder.tv_percent_change_7d.setText("7d : " + inResponse.getPercent_change_7d() + " %");
+            if (inResponse.getPrice() != null)
+                holder.tv_price.setText("Price : " + inResponse.getPrice());
+            if (inResponse.getMarket_cap() != null)
+                holder.tv_market_cap.setText("MarketCap : " + inResponse.getMarket_cap());
+            if (inResponse.getVolume_24h() != null)
+                holder.tv_volume_24h.setText("Volume 24h:  : " + inResponse.getVolume_24h());
 
-            /*if (inResponse.getPercent_change_1h() < 0) {
-                holder.tv_percent_change_1h.setTextColor(getResources().getColor(R.color.red));
+
+            if (inResponse.getPercent_change_1h() != null) {
+
+                holder.tv_percent_change_1h.setText("1h : " + inResponse.getPercent_change_1h() + "%");
+
+                if (inResponse.getPercent_change_1h() < 0) {
+                    holder.tv_percent_change_1h.setTextColor(getResources().getColor(R.color.red));
+                } else {
+                    holder.tv_percent_change_1h.setTextColor(getResources().getColor(R.color.green));
+                }
+            } else {
+                holder.tv_percent_change_1h.setText("1h :  N/A");
             }
 
-            if (inResponse.getPercent_change_24h() < 0) {
-                holder.tv_percent_change_24h.setTextColor(getResources().getColor(R.color.red));
+
+            if (inResponse.getPercent_change_24h() != null) {
+
+                holder.tv_percent_change_24h.setText("24h : " + inResponse.getPercent_change_24h() + "%");
+
+                if (inResponse.getPercent_change_24h() < 0) {
+                    holder.tv_percent_change_24h.setTextColor(getResources().getColor(R.color.red));
+                } else {
+                    holder.tv_percent_change_24h.setTextColor(getResources().getColor(R.color.green));
+                }
+            } else {
+                holder.tv_percent_change_24h.setText("24h :  N/A");
             }
+
+
+            if (inResponse.getPercent_change_7d() != null) {
+
+                holder.tv_percent_change_7d.setText("7d : " + inResponse.getPercent_change_7d() + "%");
+
+                if (inResponse.getPercent_change_7d() < 0) {
+                    holder.tv_percent_change_7d.setTextColor(getResources().getColor(R.color.red));
+                } else {
+                    holder.tv_percent_change_7d.setTextColor(getResources().getColor(R.color.green));
+                }
+            } else {
+                holder.tv_percent_change_7d.setText("7d :  N/A");
+            }
+
+
+
+/*
+
 
             if (inResponse.getPercent_change_7d() < 0) {
                 holder.tv_percent_change_7d.setTextColor(getResources().getColor(R.color.red));

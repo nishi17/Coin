@@ -2,6 +2,8 @@ package com.demo.demo_coin.retrofot;
 
 import com.google.gson.annotations.SerializedName;
 
+import org.json.JSONObject;
+
 /**
  * Created by flexi_mac4 on 06/05/18.
  */
